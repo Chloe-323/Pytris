@@ -1,0 +1,4 @@
+rotate blocks
+quick drop blocks
+clear row
+lose
