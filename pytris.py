@@ -34,6 +34,7 @@ class Block:
         for i in range(4):
             for j in range(4):
                 self.rects[i][j] = pygame.Rect(i * block_size, j * block_size, block_size, block_size)
+        blocktype = 1
         if blocktype == 0: #Z
             self.color = (255, 0, 0)
             self.coords = [(-1, -1), (0, 0), (-1, 0), (0, 1)]
@@ -87,7 +88,6 @@ class Block:
             for j in i:
                 j.move_ip(0, block_size)
         if self._is_bottom():
-            print("at bottom")
             for i in self.rects:
                 for j in i:
                     j.move_ip(0, -block_size)
@@ -97,10 +97,11 @@ class Block:
     def rotate(self):
         if not self.valid:
             return
+        old_coords = self.coords
         for i in range(len(self.coords)):
-            new_coords = (-self.coords[i][1], self.coords[i][0])
-            if not self._is_bottom():
-                self.coords[i] = new_coords
+            self.coords[i] = (-self.coords[i][1], self.coords[i][0])
+        if not self._is_bottom() and not self._is_offscreen():
+            self.coords = old_coords
         return
 
     def drop_to_bottom(self):
@@ -115,7 +116,6 @@ class Block:
             pygame.draw.rect(screen, self.color, self._resolve_rect(i))
 
         self.draw_ghost()
-        #draw ghost
 
     def draw_ghost(self):
         realself = copy.deepcopy(self.rects)
@@ -148,66 +148,20 @@ class Block:
         self.valid = False
         return
     def __del__(self):
-        print("deleting self")
         for i in self.coords:
             bottom_rects.append(self._resolve_rect(i))
             bottom_rects_draw.append((self.color, self._resolve_rect(i)))
             self.valid = False
         return
 
-#   def is_offscreen(block):
-#       for i in block[1]:
-#           if(i.top < height):
-#               return False 
-#       return True 
-
-#   def is_bottom(block):
-#       for i in block[1]:
-#           if i.collidelistall(bottom_rects):
-#               return True
-#           if i.bottom > height:
-#               return True
-#       return False
-
-#   def is_offscreen(block):
-#       for i in block[1]:
-#           if i.collidelistall(bottom_rects):
-#               return True
-#           if i.left < 0 or i.right > width:
-#               return True
-#       return False
-
-#   def move_block(block, x, y):
-#       if block == None:
-#           return
-#       for i in range(len(block[1])):
-#           block[1][i] = block[1][i].move(x, y)
-#       if is_offscreen(block):
-#           for i in range(len(block[1])):
-#               block[1][i] = block[1][i].move(-x, -y)
-
-#   def drop_block(block):
-#       if block == None:
-#           return
-#       for i in range(len(block[1])):
-#           block[1][i] = block[1][i].move(0, speed)
-
-#TODO
-#   def rotate_block(block):
-#       if block == None:
-#           return
-
-#TODO
-#   def drop_to_bottom(block):
-#       return
 
 def is_row_full(row):
     #assumptions:
-    #ten rects in full row
+    #grid_size[0] rects in full row
     #rects cannot overlap
     found_rects = 0
     for i in bottom_rects:
-        if i.x == row * block_size: #in current row
+        if i.top == row * block_size: #in current row
             found_rects += 1
     if found_rects == grid_size[0]:
         return True
@@ -218,11 +172,26 @@ def is_row_full(row):
         raise OverflowError
 
 def sweep_rows():
-    for i in range(grid_size[1]):
-        if is_row_full(i):
-            for i in bottom_rects:
-                if i.x == row * block_size:
-                    bottom_rects.remove(i)
+    for row in range(grid_size[1]):
+        if is_row_full(row):
+            drop_one = []
+            idx_offset = 0
+            for i in range(len(bottom_rects)):
+                print(bottom_rects[i - idx_offset].top, "; ", row * block_size)
+                if bottom_rects[i - idx_offset].top == row * block_size:
+                    bottom_rects.pop(i - idx_offset)
+                    bottom_rects_draw.pop(i - idx_offset)
+                    idx_offset += 1
+                elif bottom_rects[i - idx_offset].top < (row * block_size - block_size):
+                    drop_one.append(i - idx_offset)
+            for i in drop_one:
+                bottom_rects[i].move_ip(0, block_size)
+                bottom_rects_draw[i][1].move_ip(0, block_size)
+                bottom_rects_draw[i] = ((40, 0, 0), bottom_rects_draw[i][1])
+
+def lose():
+    print("You lost!")
+    exit(0)
 
 def main():
 #    avb_blocks = gen_avb_blocks()
@@ -248,9 +217,12 @@ def main():
             
 
         cur_block.drop()
+        sweep_rows()
         if not cur_block.valid:
             del cur_block
             cur_block = Block(random.randint(0, 6))
+            if cur_block._is_bottom():
+                lose()
         #new b
 #       if(cur_block == None):
 #           cur_block = copy.deepcopy(random.choice(avb_blocks))
