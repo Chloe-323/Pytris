@@ -1,4 +1,3 @@
-rotate blocks
-quick drop blocks
-clear row
-lose
+T-spins
+Animations
+More pleasant UI

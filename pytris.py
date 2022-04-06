@@ -1,10 +1,21 @@
 import sys
 import random
 import copy
-import pygame
 import math
+import os
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
+import pygame
 
 pygame.init()
+print("Welcome to Pytris! A simple Tetris implementation written in Python using the Pygame engine")
+print("Written by Chloe323 (https://github.com/Chloe-323)")
+print("")
+print("Controls:")
+print("⬅ or A\tMove left")
+print("➡ or D\tMove right")
+print("⬆ or W\tRotate")
+print("⬇ or S\tDrop")
+print("SHIFT\tHold/Swap held")
 
 #global variables (OOH SCARY)
 speed = 60
@@ -251,7 +262,7 @@ def main():
                 if bottom_rects[i][j] is not None:
                     pygame.draw.rect(screen, bottom_rects[i][j], 
                             pygame.Rect(i * block_size, j * block_size, block_size, block_size))
-        screen.blit(score_view, (40, 40))
+        screen.blit(score_view, (20, 20))
         pygame.display.flip()
 
 main()
