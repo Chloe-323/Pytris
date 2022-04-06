@@ -15,3 +15,11 @@ A simple Tetris implementation written in Python using Pygame
 # Running the game 
 
 `python pytris.py`
+
+## Controls:
+⬅ or A	Move left
+➡ or D	Move right
+⬆ or W	Rotate
+⬇ or S	Drop
+SHIFT	Hold/Swap held
+
