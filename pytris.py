@@ -2,6 +2,7 @@ import sys
 import random
 import copy
 import math
+from collections import deque
 import os
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
 import pygame
@@ -21,11 +22,13 @@ print("SHIFT\tHold/Swap held")
 speed = 60
 black = 0, 0, 0
 fps = 60
-block_size = 30
+block_size = 45
 grid_size = (10, 22)
-size = width, height = block_size * grid_size[0], block_size * grid_size[1] 
+size = width, height = block_size * grid_size[0] + 400, block_size * grid_size[1] 
 screen = pygame.display.set_mode(size)
 clock = pygame.time.Clock()
+font_small = pygame.font.Font(None, 25)
+font_big = pygame.font.Font(None, 35)
 
 cur_block = None
 bottom_rects = [[None for i in range(grid_size[1])] for j in range(grid_size[0])]
@@ -88,7 +91,7 @@ class Tetromino:
                 j.move_ip(x * block_size, y * block_size)
         self.x += x
         self.y += y
-        if self._is_offscreen():
+        if self._is_offscreen() or self._is_bottom():
             for i in self.rects:
                 for j in i:
                     j.move_ip(-x * block_size, -y * block_size)
@@ -128,16 +131,13 @@ class Tetromino:
             count += 1
         return count
 
-    def draw(self):
+    def draw(self, ghost = True):
         if not self.valid:
             return
-#       for i in self._absolute_coords():
-#           pygame.draw.rect(screen, self.color, pygame.Rect(i[0] * block_size, i[1] * block_size, block_size, block_size))
         for i in self.coords:
             pygame.draw.rect(screen, self.color, self._resolve_rect(i))
-#            pygame.draw.rect(screen, self.color, pygame.Rect((self.x + i[0]) * block_size, (self.y + i[1]) * block_size, block_size, block_size))
-
-        self.draw_ghost()
+        if ghost:
+            self.draw_ghost()
 
     def draw_ghost(self):
         realself = copy.deepcopy(self.rects)
@@ -202,14 +202,40 @@ def lose(score):
     print("Score: ", score)
     exit(0)
 
+def draw_ui(held, next_tetr, score):
+    ui_area = pygame.Rect(block_size * grid_size[0], 0, 400, height)
+    ui_color = (20, 20, 20)
+    pygame.draw.rect(screen, ui_color, ui_area)
+
+    hb_text = font_big.render("Held block:", True, (255, 255, 255))
+    screen.blit(hb_text, (width - 280, 150))
+    if held != -1:
+        held_block = Tetromino(held)
+        for i in held_block.coords:
+            held_block._resolve_rect(i).move_ip(width - 450, 200)
+        held_block.draw(False)
+
+    nb_text = font_big.render("Next:", True, (255, 255, 255))
+    screen.blit(nb_text, (width - 280, 350))
+    for i in range(len(next_tetr)):
+        draw_me = Tetromino(next_tetr[i])
+        for j in draw_me.coords:
+            draw_me._resolve_rect(j).move_ip(width - 450, 400 + 200 * i)
+        draw_me.draw(False)
+
+    score_view = font_small.render("Score: " + str(score), True, (255, 255, 255))
+    screen.blit(score_view, (width - 380, 20))
+    return
+
 def main():
 #    avb_blocks = gen_avb_blocks()
     cur_block = Tetromino(1)
+    tetr_queue = deque([random.randint(0, 6),random.randint(0, 6),random.randint(0, 6)])
     held_block_type = -1
     frames = 0
     speed = 15
     score = 0
-    font = pygame.font.Font(None, 20)
+    swapped = False
     while 1:
         #framerate cap
         clock.tick(fps)
@@ -234,7 +260,9 @@ def main():
                     score += 2 * cur_block.drop_to_bottom()
                     frames = 0
                 if keypress == pygame.K_LSHIFT:
-                    held_block_type, cur_block = cur_block.blocktype, Tetromino(held_block_type)
+                    if swapped == False:
+                        held_block_type, cur_block = cur_block.blocktype, Tetromino(held_block_type)
+                        swapped = True
             
 
         if score > 1000:
@@ -243,6 +271,8 @@ def main():
             speed = 10
         if score > 4000:
             speed = 7
+        if score > 8000:
+            speed = 5
             
         if frames % speed == 0:
             cur_block.drop()
@@ -250,19 +280,20 @@ def main():
             score += [0, 100, 300, 500, 800][sweep_rows()]
             if not cur_block.valid:
                 del cur_block
-                cur_block = Tetromino()
+                cur_block = Tetromino(tetr_queue.popleft())
+                tetr_queue.append(random.randint(0, 6))
+                swapped = False
                 if cur_block._is_bottom():
                     lose(score)
 
         screen.fill(black)
-        score_view = font.render("Score: " + str(score), True, (255, 255, 255))
         cur_block.draw()
         for i in range(len(bottom_rects)):
             for j in range(len(bottom_rects[i])):
                 if bottom_rects[i][j] is not None:
                     pygame.draw.rect(screen, bottom_rects[i][j], 
                             pygame.Rect(i * block_size, j * block_size, block_size, block_size))
-        screen.blit(score_view, (20, 20))
+        draw_ui(held_block_type, tetr_queue, score)
         pygame.display.flip()
 
 main()
