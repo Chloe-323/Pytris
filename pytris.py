@@ -228,12 +228,11 @@ def draw_ui(held, next_tetr, score):
     return
 
 def main():
-#    avb_blocks = gen_avb_blocks()
     cur_block = Tetromino(1)
     tetr_queue = deque([random.randint(0, 6),random.randint(0, 6),random.randint(0, 6)])
     held_block_type = -1
     frames = 0
-    speed = 15
+    speed = 25
     score = 0
     swapped = False
     while 1:
@@ -266,13 +265,13 @@ def main():
             
 
         if score > 1000:
-            speed = 12
+            speed = 18
         if score > 2000:
-            speed = 10
+            speed = 14
         if score > 4000:
-            speed = 7
+            speed = 10
         if score > 8000:
-            speed = 5
+            speed = 7
             
         if frames % speed == 0:
             cur_block.drop()
@@ -296,4 +295,3 @@ def main():
         draw_ui(held_block_type, tetr_queue, score)
         pygame.display.flip()
 
-main()

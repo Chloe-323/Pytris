@@ -1,0 +1,3 @@
+import pytris
+
+pytris.main()
