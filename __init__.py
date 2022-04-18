@@ -1,3 +1,4 @@
 import pytris
 
-pytris.main()
+for i in pytris.main():
+    print(i)

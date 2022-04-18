@@ -2,6 +2,7 @@ import sys
 import random
 import copy
 import math
+import json
 from collections import deque
 import os
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
@@ -30,7 +31,6 @@ clock = pygame.time.Clock()
 font_small = pygame.font.Font(None, 25)
 font_big = pygame.font.Font(None, 35)
 
-cur_block = None
 bottom_rects = [[None for i in range(grid_size[1])] for j in range(grid_size[0])]
 
 class Tetromino:
@@ -106,7 +106,7 @@ class Tetromino:
             for j in i:
                 j.move_ip(0, block_size)
         self.y += 1
-        if self._is_bottom():
+        if self._is_offscreen() or self._is_bottom():
             for i in self.rects:
                 for j in i:
                     j.move_ip(0, -block_size)
@@ -117,10 +117,11 @@ class Tetromino:
     def rotate(self):
         if not self.valid:
             return
-        old_coords = self.coords
+        old_coords = copy.deepcopy(self.coords)
         for i in range(len(self.coords)):
             self.coords[i] = (-self.coords[i][1], self.coords[i][0])
-        if not self._is_offscreen() and not self._is_bottom():
+        if (self._is_offscreen()) or (self._is_bottom()):
+            print("Rotation failed; reverting to old coords")
             self.coords = old_coords
         return
 
@@ -156,6 +157,8 @@ class Tetromino:
         self.y = realy
 
     def _is_bottom(self):
+#       if self._is_offscreen():
+#           return True
         for i in self._absolute_coords():
             if i[1] >= grid_size[1]:
                 return True
@@ -227,7 +230,19 @@ def draw_ui(held, next_tetr, score):
     screen.blit(score_view, (width - 380, 20))
     return
 
-def main():
+def json_encode_state(cur_block, block_queue, held_block_type, swapped):
+    state = {}
+    state['board'] = [[(0 if bottom_rects[i][j] == None else 1)for i in range(grid_size[0])] for j in range(grid_size[1])]
+    state['cur_block'] = cur_block.blocktype if cur_block is not None else -1
+    state['swapped'] = swapped
+    state['queue'] = [i for i in block_queue]
+    state['held_block'] = held_block_type
+    return json.dumps(state)
+
+
+
+def main(json_state = ""):
+
     cur_block = Tetromino(1)
     tetr_queue = deque([random.randint(0, 6),random.randint(0, 6),random.randint(0, 6)])
     held_block_type = -1
@@ -235,6 +250,16 @@ def main():
     speed = 25
     score = 0
     swapped = False
+    if json_state != "":
+        state = json.loads(json_state)
+        for i in range(len(state['board'])):
+            for j in range(len(state['board'][i])):
+                print("[", j,", ", i, "]")
+                if state['board'][i][j] == 1:
+                    bottom_rects[j][i] = (140, 140 ,140)
+        cur_block = Tetromino(state['cur_block'])
+        tetr_queue = deque(state['queue'])
+        held_block_type = state['held_block']
     while 1:
         #framerate cap
         clock.tick(fps)
@@ -294,4 +319,4 @@ def main():
                             pygame.Rect(i * block_size, j * block_size, block_size, block_size))
         draw_ui(held_block_type, tetr_queue, score)
         pygame.display.flip()
-
+        yield json_encode_state(cur_block, tetr_queue, held_block_type, swapped)
