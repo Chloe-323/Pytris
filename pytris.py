@@ -31,7 +31,6 @@ clock = pygame.time.Clock()
 font_small = pygame.font.Font(None, 25)
 font_big = pygame.font.Font(None, 35)
 
-bottom_rects = [[None for i in range(grid_size[1])] for j in range(grid_size[0])]
 
 class Tetromino:
     valid = True
@@ -41,7 +40,8 @@ class Tetromino:
     color = (255, 255, 255)
     blocktype = -1
     x, y = 1, 1
-    def __init__(self, blocktype = -1):
+    def __init__(self, br, blocktype = -1):
+        self.bottom_rects = br
         for i in range(4):
             for j in range(4):
                 self.rects[i][j] = pygame.Rect(i * block_size, j * block_size, block_size, block_size)
@@ -163,7 +163,7 @@ class Tetromino:
         for i in self._absolute_coords():
             if i[1] >= grid_size[1]:
                 return True
-            if bottom_rects[i[0]][i[1]] is not None:
+            if self.bottom_rects[i[0]][i[1]] is not None:
                 return True
         return False
 
@@ -176,26 +176,26 @@ class Tetromino:
     def _delete_self(self):
         self.valid = False
         for i in self._absolute_coords():
-            bottom_rects[i[0]][i[1]] = self.color
+            self.bottom_rects[i[0]][i[1]] = self.color
         return
     def __del__(self):
         return
 
 
-def is_row_full(row):
+def is_row_full(row, bottom_rects):
     for i in range(grid_size[0]):
         if bottom_rects[i][row] == None:
             return False
     return True
 
-def sweep_rows():
+def sweep_rows(bottom_rects):
     rows_cleared = 0
     for row in range(grid_size[1] - 1, -1, -1):
         if rows_cleared != 0:
             for i in range(grid_size[0]):
                 bottom_rects[i][row + rows_cleared] = bottom_rects[i][row]
                 bottom_rects[i][row] = None
-        if is_row_full(row):
+        if is_row_full(row, bottom_rects):
             for i in range(grid_size[0]):
                 bottom_rects[i][row] = None
             rows_cleared += 1
@@ -214,7 +214,7 @@ def draw_ui(held, next_tetr, score, screen):
     hb_text = font_big.render("Held block:", True, (255, 255, 255))
     screen.blit(hb_text, (width - 280, 150))
     if held != -1:
-        held_block = Tetromino(held)
+        held_block = Tetromino(None, held)
         for i in held_block.coords:
             held_block._resolve_rect(i).move_ip(width - 450, 200)
         held_block.draw(screen, False)
@@ -222,7 +222,7 @@ def draw_ui(held, next_tetr, score, screen):
     nb_text = font_big.render("Next:", True, (255, 255, 255))
     screen.blit(nb_text, (width - 280, 350))
     for i in range(len(next_tetr)):
-        draw_me = Tetromino(next_tetr[i])
+        draw_me = Tetromino(None, next_tetr[i])
         for j in draw_me.coords:
             draw_me._resolve_rect(j).move_ip(width - 450, 400 + 200 * i)
         draw_me.draw(screen, False)
@@ -231,7 +231,7 @@ def draw_ui(held, next_tetr, score, screen):
     screen.blit(score_view, (width - 380, 20))
     return
 
-def json_encode_state(cur_block, block_queue, held_block_type, swapped):
+def json_encode_state(cur_block, block_queue, held_block_type, swapped, bottom_rects):
     state = {}
     state['board'] = [[(0 if bottom_rects[i][j] == None else 1)for i in range(grid_size[0])] for j in range(grid_size[1])]
     state['cur_block'] = cur_block.blocktype if cur_block is not None else -1
@@ -242,7 +242,7 @@ def json_encode_state(cur_block, block_queue, held_block_type, swapped):
 
 
 def main(json_state = "", hardcode_speed = -1, headless = False, headless_input = None):
-    cur_block = Tetromino(1)
+    #    print(hex(id(headless_input)))
     tetr_queue = deque([random.randint(0, 6),random.randint(0, 6),random.randint(0, 6)])
     held_block_type = -1
     frames = 0
@@ -250,12 +250,12 @@ def main(json_state = "", hardcode_speed = -1, headless = False, headless_input 
     score = 0
     swapped = False
     screen = None
+    bottom_rects = [[None for i in range(grid_size[1])] for j in range(grid_size[0])]
+    cur_block = Tetromino(bottom_rects, 1)
     if not headless:
         screen = pygame.display.set_mode(size)
 #    else:
         #        tty.setcbreak(sys.stdin.fileno())
-    global bottom_rects
-    bottom_rects = [[None for i in range(grid_size[1])] for j in range(grid_size[0])]
     if json_state != "":
         state = json.loads(json_state)
         for i in range(len(state['board'])):
@@ -263,7 +263,7 @@ def main(json_state = "", hardcode_speed = -1, headless = False, headless_input 
                 print("[", j,", ", i, "]")
                 if state['board'][i][j] == 1:
                     bottom_rects[j][i] = (140, 140 ,140)
-        cur_block = Tetromino(state['cur_block'])
+        cur_block = Tetromino(bottom_rects, state['cur_block'])
         tetr_queue = deque(state['queue'])
         held_block_type = state['held_block']
     while 1:
@@ -298,7 +298,7 @@ def main(json_state = "", hardcode_speed = -1, headless = False, headless_input 
                     if keypress == pygame.K_LSHIFT:
                     #    print("SHIFT")
                         if swapped == False:
-                            held_block_type, cur_block = cur_block.blocktype, Tetromino(held_block_type)
+                            held_block_type, cur_block = cur_block.blocktype, Tetromino(bottom_rects, held_block_type)
                             swapped = True
         else:
             for event in pygame.event.get():
@@ -325,7 +325,7 @@ def main(json_state = "", hardcode_speed = -1, headless = False, headless_input 
                     if keypress == pygame.K_LSHIFT:
                         print("SHIFT")
                         if swapped == False:
-                            held_block_type, cur_block = cur_block.blocktype, Tetromino(held_block_type)
+                            held_block_type, cur_block = cur_block.blocktype, Tetromino(bottom_rects, held_block_type)
                             swapped = True
 
         if score > 1000:
@@ -342,10 +342,10 @@ def main(json_state = "", hardcode_speed = -1, headless = False, headless_input 
         if frames % speed == 0:
             cur_block.drop()
             score += 1
-            score += [0, 100, 300, 500, 800][sweep_rows()]
+            score += [0, 100, 300, 500, 800][sweep_rows(bottom_rects)]
             if not cur_block.valid:
                 del cur_block
-                cur_block = Tetromino(tetr_queue.popleft())
+                cur_block = Tetromino(bottom_rects, tetr_queue.popleft())
                 tetr_queue.append(random.randint(0, 6))
                 swapped = False
                 if cur_block._is_bottom():
@@ -373,4 +373,4 @@ def main(json_state = "", hardcode_speed = -1, headless = False, headless_input 
         #            else:
         #                print("_", end=" ")
         #        print("")
-        yield json_encode_state(cur_block, tetr_queue, held_block_type, swapped)
+        yield json_encode_state(cur_block, tetr_queue, held_block_type, swapped, bottom_rects)
