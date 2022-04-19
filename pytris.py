@@ -310,7 +310,7 @@ def main(json_state = "", hardcode_speed = -1):
                 tetr_queue.append(random.randint(0, 6))
                 swapped = False
                 if cur_block._is_bottom():
-                    lose(score)
+                    yield(json.dumps({"LOSS":score}))
 
         screen.fill(black)
         cur_block.draw()
