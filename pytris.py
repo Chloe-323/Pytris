@@ -240,9 +240,7 @@ def json_encode_state(cur_block, block_queue, held_block_type, swapped):
     return json.dumps(state)
 
 
-
 def main(json_state = "", hardcode_speed = -1):
-
     cur_block = Tetromino(1)
     tetr_queue = deque([random.randint(0, 6),random.randint(0, 6),random.randint(0, 6)])
     held_block_type = -1
@@ -250,6 +248,7 @@ def main(json_state = "", hardcode_speed = -1):
     speed = 25
     score = 0
     swapped = False
+    bottom_rects = [[None for i in range(grid_size[1])] for j in range(grid_size[0])]
     if json_state != "":
         state = json.loads(json_state)
         for i in range(len(state['board'])):
