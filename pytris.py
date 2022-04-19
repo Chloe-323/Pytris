@@ -76,7 +76,7 @@ class Tetromino:
             self.coords = [(-0.5, -0.5), (-0.5, 0.5), (0.5, -0.5), (0.5, 0.5)]
         else:
             self.valid = False
-        self.x += 4
+        self.x += 3
 #        self.move(4, 0)
 
     def _resolve_rect(self, coords):
