@@ -351,16 +351,16 @@ def main(json_state = "", hardcode_speed = -1, headless = False):
                                 pygame.Rect(i * block_size, j * block_size, block_size, block_size))
             draw_ui(held_block_type, tetr_queue, score, screen)
             pygame.display.flip()
-        else:
-            print("Held block: ", held_block_type)
-            print("Queue: ", tetr_queue)
-            print("Score: ", score)
-            print("Cur Block:", cur_block.blocktype)
-            for i in range(len(bottom_rects)):
-                for j in range(len(bottom_rects[i])):
-                    if bottom_rects[i][j] is not None:
-                        print("X", end=" ")
-                    else:
-                        print("_", end=" ")
-                print("")
+        #else:
+        #    print("Held block: ", held_block_type)
+        #    print("Queue: ", tetr_queue)
+        #    print("Score: ", score)
+        #    print("Cur Block:", cur_block.blocktype)
+        #    for i in range(len(bottom_rects)):
+        #        for j in range(len(bottom_rects[i])):
+        #            if bottom_rects[i][j] is not None:
+        #                print("X", end=" ")
+        #            else:
+        #                print("_", end=" ")
+        #        print("")
         yield json_encode_state(cur_block, tetr_queue, held_block_type, swapped)
