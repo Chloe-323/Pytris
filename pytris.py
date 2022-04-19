@@ -248,6 +248,7 @@ def main(json_state = "", hardcode_speed = -1):
     speed = 25
     score = 0
     swapped = False
+    global bottom_rects
     bottom_rects = [[None for i in range(grid_size[1])] for j in range(grid_size[0])]
     if json_state != "":
         state = json.loads(json_state)
