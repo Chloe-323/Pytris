@@ -160,6 +160,8 @@ class Tetromino:
     def _is_bottom(self):
 #       if self._is_offscreen():
 #           return True
+        if self.bottom_rects == None:
+            return False
         for i in self._absolute_coords():
             if i[1] >= grid_size[1]:
                 return True
@@ -168,6 +170,8 @@ class Tetromino:
         return False
 
     def _is_offscreen(self):
+        if self.bottom_rects == None:
+            return False
         for i in self._absolute_coords():
             if i[0] < 0 or i[0] >= grid_size[0]:
                 return True
