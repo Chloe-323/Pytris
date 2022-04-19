@@ -241,7 +241,7 @@ def json_encode_state(cur_block, block_queue, held_block_type, swapped):
 
 
 
-def main(json_state = ""):
+def main(json_state = "", hardcode_speed = -1):
 
     cur_block = Tetromino(1)
     tetr_queue = deque([random.randint(0, 6),random.randint(0, 6),random.randint(0, 6)])
@@ -297,6 +297,8 @@ def main(json_state = ""):
             speed = 10
         if score > 8000:
             speed = 7
+        if hardcode_speed > 0:
+            speed = hardcode_speed
             
         if frames % speed == 0:
             cur_block.drop()
