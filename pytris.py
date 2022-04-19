@@ -45,6 +45,7 @@ class Tetromino:
         for i in range(4):
             for j in range(4):
                 self.rects[i][j] = pygame.Rect(i * block_size, j * block_size, block_size, block_size)
+                self.rects[i][j].move_ip(3 * block_size, 0)
         if blocktype == -1:
             blocktype = random.randint(0, 6)
         self.blocktype = blocktype
@@ -75,7 +76,8 @@ class Tetromino:
             self.coords = [(-0.5, -0.5), (-0.5, 0.5), (0.5, -0.5), (0.5, 0.5)]
         else:
             self.valid = False
-        self.move(4, 0)
+        self.x += 4
+#        self.move(4, 0)
 
     def _resolve_rect(self, coords):
         return self.rects[int(coords[0] + self.pivot[0])][int(coords[1] + self.pivot[1])]
