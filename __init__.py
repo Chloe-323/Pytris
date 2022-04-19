@@ -1,6 +1,7 @@
 import pytris
+import json
 
-for i in pytris.main():
+for i in pytris.main(headless = False):
     if "LOSS" in i:
         break
-    pass
+    #print(json.loads(i))
