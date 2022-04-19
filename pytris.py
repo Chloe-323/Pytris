@@ -272,25 +272,25 @@ def main(json_state = "", hardcode_speed = -1):
             if event.type == pygame.QUIT:
                 sys.exit()
             if event.type == pygame.KEYDOWN:
-                keypress = event.__dict__["key"]
+                keypress = event.key
                 if keypress == pygame.K_a or keypress == pygame.K_LEFT:
-                    print("LEFT")
+                #    print("LEFT")
                     cur_block.move(-1, 0)
                     frames = 0
                 if keypress == pygame.K_d or keypress == pygame.K_RIGHT:
-                    print("RIGHT")
+                #    print("RIGHT")
                     cur_block.move(1, 0)
                     frames = 0
                 if keypress == pygame.K_w or keypress == pygame.K_UP:
-                    print("UP")
+                #    print("UP")
                     cur_block.rotate()
                     frames = 0
                 if keypress == pygame.K_s or keypress == pygame.K_DOWN:
-                    print("DOWN")
+                #    print("DOWN")
                     score += 2 * cur_block.drop_to_bottom()
                     frames = 0
                 if keypress == pygame.K_LSHIFT:
-                    print("SHIFT")
+                #    print("SHIFT")
                     if swapped == False:
                         held_block_type, cur_block = cur_block.blocktype, Tetromino(held_block_type)
                         swapped = True
