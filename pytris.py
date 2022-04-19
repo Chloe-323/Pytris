@@ -32,7 +32,6 @@ font_small = pygame.font.Font(None, 25)
 font_big = pygame.font.Font(None, 35)
 
 bottom_rects = [[None for i in range(grid_size[1])] for j in range(grid_size[0])]
-#headless_input = deque()
 
 class Tetromino:
     valid = True
@@ -124,7 +123,6 @@ class Tetromino:
         for i in range(len(self.coords)):
             self.coords[i] = (-self.coords[i][1], self.coords[i][0])
         if (self._is_offscreen()) or (self._is_bottom()):
-            print("Rotation failed; reverting to old coords")
             self.coords = old_coords
         return
 
@@ -243,7 +241,7 @@ def json_encode_state(cur_block, block_queue, held_block_type, swapped):
     return json.dumps(state)
 
 
-def main(json_state = "", hardcode_speed = -1, headless = False):
+def main(json_state = "", hardcode_speed = -1, headless = False, headless_input = None):
     cur_block = Tetromino(1)
     tetr_queue = deque([random.randint(0, 6),random.randint(0, 6),random.randint(0, 6)])
     held_block_type = -1
@@ -254,8 +252,8 @@ def main(json_state = "", hardcode_speed = -1, headless = False):
     screen = None
     if not headless:
         screen = pygame.display.set_mode(size)
-    else:
-        tty.setcbreak(sys.stdin.fileno())
+#    else:
+        #        tty.setcbreak(sys.stdin.fileno())
     global bottom_rects
     bottom_rects = [[None for i in range(grid_size[1])] for j in range(grid_size[0])]
     if json_state != "":
@@ -270,53 +268,65 @@ def main(json_state = "", hardcode_speed = -1, headless = False):
         held_block_type = state['held_block']
     while 1:
         #framerate cap
-        clock.tick(fps)
+        if not headless:
+            clock.tick(fps)
         frames += 1
 
         #handle events
         if headless:
-            user_in = "" #TODO: get this to work w/o hanging
-            if user_in == 'a':
-                event = pygame.event.Event(pygame.KEYDOWN,key = pygame.K_LEFT)
-                pygame.event.post(event)
-            if user_in == 'd':
-                event = pygame.event.Event(pygame.KEYDOWN,key = pygame.K_RIGHT)
-                pygame.event.post(event)
-            if user_in == 'w':
-                event = pygame.event.Event(pygame.KEYDOWN,key = pygame.K_UP)
-                pygame.event.post(event)
-            if user_in == 's':
-                event = pygame.event.Event(pygame.KEYDOWN,key = pygame.K_DOWN)
-                pygame.event.post(event)
-            if user_in == ' ': #idk how to get shift from terminal raw
-                event = pygame.event.Event(pygame.KEYDOWN,key = pygame.K_LSHIFT)
-                pygame.event.post(event)
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                sys.exit()
-            if event.type == pygame.KEYDOWN:
-                keypress = event.key
-                if keypress == pygame.K_a or keypress == pygame.K_LEFT:
-                #    print("LEFT")
-                    cur_block.move(-1, 0)
-                    frames = 0
-                if keypress == pygame.K_d or keypress == pygame.K_RIGHT:
-                #    print("RIGHT")
-                    cur_block.move(1, 0)
-                    frames = 0
-                if keypress == pygame.K_w or keypress == pygame.K_UP:
-                #    print("UP")
-                    cur_block.rotate()
-                    frames = 0
-                if keypress == pygame.K_s or keypress == pygame.K_DOWN:
-                #    print("DOWN")
-                    score += 2 * cur_block.drop_to_bottom()
-                    frames = 0
-                if keypress == pygame.K_LSHIFT:
-                #    print("SHIFT")
-                    if swapped == False:
-                        held_block_type, cur_block = cur_block.blocktype, Tetromino(held_block_type)
-                        swapped = True
+            for event in headless_input:
+                if event.type == pygame.QUIT:
+                    sys.exit()
+                if event.type == pygame.KEYDOWN:
+                    keypress = event.key
+                    if keypress == pygame.K_a or keypress == pygame.K_LEFT:
+                    #    print("LEFT")
+                        cur_block.move(-1, 0)
+                        frames = 0
+                    if keypress == pygame.K_d or keypress == pygame.K_RIGHT:
+                    #    print("RIGHT")
+                        cur_block.move(1, 0)
+                        frames = 0
+                    if keypress == pygame.K_w or keypress == pygame.K_UP:
+                    #    print("UP")
+                        cur_block.rotate()
+                        frames = 0
+                    if keypress == pygame.K_s or keypress == pygame.K_DOWN:
+                    #    print("DOWN")
+                        score += 2 * cur_block.drop_to_bottom()
+                        frames = 0
+                    if keypress == pygame.K_LSHIFT:
+                    #    print("SHIFT")
+                        if swapped == False:
+                            held_block_type, cur_block = cur_block.blocktype, Tetromino(held_block_type)
+                            swapped = True
+        else:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    sys.exit()
+                if event.type == pygame.KEYDOWN:
+                    keypress = event.key
+                    if keypress == pygame.K_a or keypress == pygame.K_LEFT:
+                        print("LEFT")
+                        cur_block.move(-1, 0)
+                        frames = 0
+                    if keypress == pygame.K_d or keypress == pygame.K_RIGHT:
+                        print("RIGHT")
+                        cur_block.move(1, 0)
+                        frames = 0
+                    if keypress == pygame.K_w or keypress == pygame.K_UP:
+                        print("UP")
+                        cur_block.rotate()
+                        frames = 0
+                    if keypress == pygame.K_s or keypress == pygame.K_DOWN:
+                        print("DOWN")
+                        score += 2 * cur_block.drop_to_bottom()
+                        frames = 0
+                    if keypress == pygame.K_LSHIFT:
+                        print("SHIFT")
+                        if swapped == False:
+                            held_block_type, cur_block = cur_block.blocktype, Tetromino(held_block_type)
+                            swapped = True
 
         if score > 1000:
             speed = 18
