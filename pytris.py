@@ -51,13 +51,13 @@ class Tetromino:
         self.blocktype = blocktype
         if blocktype == 0: #Z
             self.color = (255, 0, 0)
-            self.coords = [(-1, -1), (0, 0), (-1, 0), (0, 1)]
+            self.coords = [(0, -1), (0, 0), (-1, 0), (-1, 1)]
         elif blocktype == 1: #T
             self.color = (255, 0, 255)
             self.coords = [(0, -1), (0, 0), (-1, 0), (1, 0)]
         elif blocktype == 2: #S
             self.color = (0, 255, 0)
-            self.coords = [(0, -1), (0, 0), (-1, 0), (-1, 1)]
+            self.coords = [(-1, -1), (0, 0), (-1, 0), (0, 1)]
         elif blocktype == 3: #I
             self.pivot = (1.5, 1.5)
             self.x, self.y = 1.5, 1.5
@@ -193,17 +193,20 @@ def is_row_full(row, bottom_rects):
     return True
 
 def sweep_rows(bottom_rects):
-    rows_cleared = 0
-    for row in range(grid_size[1] - 1, -1, -1):
-        if rows_cleared != 0:
-            for i in range(grid_size[0]):
-                bottom_rects[i][row + rows_cleared] = bottom_rects[i][row]
-                bottom_rects[i][row] = None
-        if is_row_full(row, bottom_rects):
-            for i in range(grid_size[0]):
-                bottom_rects[i][row] = None
-            rows_cleared += 1
-    return rows_cleared
+    total_rows_cleared = 0
+    for d in range(4):
+        rows_cleared = 0
+        for row in range(grid_size[1] - 1, -1, -1):
+            if rows_cleared != 0:
+                for i in range(grid_size[0]):
+                    bottom_rects[i][row + rows_cleared] = bottom_rects[i][row]
+                    bottom_rects[i][row] = None
+            if is_row_full(row, bottom_rects):
+                for i in range(grid_size[0]):
+                    bottom_rects[i][row] = None
+                rows_cleared += 1
+        total_rows_cleared += rows_cleared
+    return total_rows_cleared
 
 def lose(score):
     print("You lost!")
@@ -264,7 +267,6 @@ def main(json_state = "", hardcode_speed = -1, headless = False, headless_input 
         state = json.loads(json_state)
         for i in range(len(state['board'])):
             for j in range(len(state['board'][i])):
-                print("[", j,", ", i, "]")
                 if state['board'][i][j] == 1:
                     bottom_rects[j][i] = (140, 140 ,140)
         cur_block = Tetromino(bottom_rects, state['cur_block'])
@@ -311,23 +313,23 @@ def main(json_state = "", hardcode_speed = -1, headless = False, headless_input 
                 if event.type == pygame.KEYDOWN:
                     keypress = event.key
                     if keypress == pygame.K_a or keypress == pygame.K_LEFT:
-                        print("LEFT")
+                        #                        print("LEFT")
                         cur_block.move(-1, 0)
                         frames = 0
                     if keypress == pygame.K_d or keypress == pygame.K_RIGHT:
-                        print("RIGHT")
+                        #print("RIGHT")
                         cur_block.move(1, 0)
                         frames = 0
                     if keypress == pygame.K_w or keypress == pygame.K_UP:
-                        print("UP")
+                        #print("UP")
                         cur_block.rotate()
                         frames = 0
                     if keypress == pygame.K_s or keypress == pygame.K_DOWN:
-                        print("DOWN")
+                        #print("DOWN")
                         score += 2 * cur_block.drop_to_bottom()
                         frames = 0
                     if keypress == pygame.K_LSHIFT:
-                        print("SHIFT")
+                        #print("SHIFT")
                         if swapped == False:
                             held_block_type, cur_block = cur_block.blocktype, Tetromino(bottom_rects, held_block_type)
                             swapped = True
