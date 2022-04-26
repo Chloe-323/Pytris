@@ -238,13 +238,14 @@ def draw_ui(held, next_tetr, score, screen):
     screen.blit(score_view, (width - 380, 20))
     return
 
-def json_encode_state(cur_block, block_queue, held_block_type, swapped, bottom_rects):
+def json_encode_state(cur_block, block_queue, held_block_type, swapped, bottom_rects, score):
     state = {}
     state['board'] = [[(0 if bottom_rects[i][j] == None else 1)for i in range(grid_size[0])] for j in range(grid_size[1])]
     state['cur_block'] = cur_block.blocktype if cur_block is not None else -1
     state['swapped'] = swapped
     state['queue'] = [i for i in block_queue]
     state['held_block'] = held_block_type
+    state['score'] = score
     return json.dumps(state)
 
 
@@ -379,4 +380,4 @@ def main(json_state = "", hardcode_speed = -1, headless = False, headless_input 
         #            else:
         #                print("_", end=" ")
         #        print("")
-        yield json_encode_state(cur_block, tetr_queue, held_block_type, swapped, bottom_rects)
+        yield json_encode_state(cur_block, tetr_queue, held_block_type, swapped, bottom_rects, score)
