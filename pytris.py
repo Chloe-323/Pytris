@@ -238,14 +238,14 @@ def draw_ui(held, next_tetr, score, screen):
     screen.blit(score_view, (width - 380, 20))
     return
 
-def json_encode_state(cur_block, block_queue, held_block_type, swapped, bottom_rects, score):
+def json_encode_state(cur_block, block_queue, held_block_type, swapped, bottom_rects, score, delta_score):
     state = {}
     state['board'] = [[(0 if bottom_rects[i][j] == None else 1)for i in range(grid_size[0])] for j in range(grid_size[1])]
     state['cur_block'] = cur_block.blocktype if cur_block is not None else -1
     state['swapped'] = swapped
     state['queue'] = [i for i in block_queue]
     state['held_block'] = held_block_type
-    state['score'] = score
+    state['delta_score'] = delta_score
     return json.dumps(state)
 
 
@@ -346,10 +346,12 @@ def main(json_state = "", hardcode_speed = -1, headless = False, headless_input 
         if hardcode_speed > 0:
             speed = hardcode_speed
             
+        delta_score = 0
         if frames % speed == 0:
             cur_block.drop()
-            score += 1
-            score += [0, 100, 300, 500, 800][sweep_rows(bottom_rects)]
+            delta_score = 1
+            delta_score += [0, 100, 300, 500, 800][sweep_rows(bottom_rects)]
+            score += delta_score
             if not cur_block.valid:
                 del cur_block
                 cur_block = Tetromino(bottom_rects, tetr_queue.popleft())
@@ -380,4 +382,4 @@ def main(json_state = "", hardcode_speed = -1, headless = False, headless_input 
         #            else:
         #                print("_", end=" ")
         #        print("")
-        yield json_encode_state(cur_block, tetr_queue, held_block_type, swapped, bottom_rects, score)
+        yield json_encode_state(cur_block, tetr_queue, held_block_type, swapped, bottom_rects, score, delta_score)
